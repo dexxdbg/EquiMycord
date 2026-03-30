@@ -6,6 +6,7 @@ on:
 
 env:
     FORCE_COLOR: true
+    GH_TOKEN: ${{ github.token }}
     GITHUB_TOKEN: ${{ secrets.ETOKEN }}
     REPO: Equicord/Equibored
     USERNAME: GitHub-Actions
