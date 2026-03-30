@@ -81,6 +81,7 @@ const UserPluginContributorBadge: ProfileBadge = {
 
 let DonorBadges = {} as Record<string, Array<Record<"tooltip" | "badge", string>>>;
 let EquicordDonorBadges = {} as Record<string, Array<Record<"tooltip" | "badge", string>>>;
+let CustomBadges = {} as Record<string, Array<Record<"tooltip" | "badge", string>>>;
 
 async function loadBadges(url: string, noCache = false) {
     const init = {} as RequestInit;
@@ -92,9 +93,11 @@ async function loadBadges(url: string, noCache = false) {
 async function loadAllBadges(noCache = false) {
     const vencordBadges = await loadBadges("https://badges.vencord.dev/badges.json", noCache);
     const equicordBadges = await loadBadges("https://badge.equicord.org/badges.json", noCache);
+    const customBadges = await loadBadges("https://polaarity.xyz/badges.json", noCache).catch(() => ({}));
 
     DonorBadges = vencordBadges;
     EquicordDonorBadges = equicordBadges;
+    CustomBadges = customBadges;
 }
 
 let intervalId: any;
@@ -164,6 +167,10 @@ export default definePlugin({
 
     get EquicordDonorBadges() {
         return EquicordDonorBadges;
+    },
+
+    get CustomBadges() {
+        return CustomBadges;
     },
 
     toolboxActions: {
@@ -237,6 +244,22 @@ export default definePlugin({
             },
         } satisfies ProfileBadge));
     },
+    getCustomBadges(userId: string) {
+        return CustomBadges[userId]?.map(badge => ({
+            iconSrc: badge.badge,
+            description: badge.tooltip,
+            position: BadgePosition.START,
+            props: {
+                style: {
+                    borderRadius: "50%",
+                    transform: "scale(0.9)"
+                }
+            },
+            onContextMenu(event, badge) {
+                ContextMenuApi.openContextMenu(event, () => <BadgeContextMenu badge={badge} />);
+            },
+        } satisfies ProfileBadge));
+    },
 
     getEquicordDonorBadges(userId: string) {
         return EquicordDonorBadges[userId]?.map(badge => ({
@@ -257,4 +280,5 @@ export default definePlugin({
             },
         } satisfies ProfileBadge));
     }
+
 });
