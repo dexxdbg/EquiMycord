@@ -28,6 +28,10 @@ export default definePlugin({
                     match: /children:\[.*?\{\}\)\]/g,
                     replace: "children:$self.makeDevBanner()"
                 },
+                {
+                    match: /\/assets\/version\./g,
+                    replace: '"data:application/json,{}#"'
+                }
             ]
         }
     ],
