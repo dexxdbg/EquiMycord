@@ -1,17 +1,68 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2024 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+import "./styles.css";
+
+import { definePluginSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
-import { EquicordDevs } from "@utils/constants";
-import definePlugin from "@utils/types";
-import { Tooltip } from "@webpack/common";
+import { Devs } from "@utils/constants";
+import { classNameFactory } from "@utils/css";
+import definePlugin, { makeRange, OptionType } from "@utils/types";
+import { ContextMenuApi, FluxDispatcher, Menu, React, Tooltip, useEffect } from "@webpack/common";
 import { RefObject } from "react";
 
-type MediaRef = RefObject<HTMLVideoElement> | undefined;
+import SpeedIcon from "./components/SpeedIcon";
+
+const cl = classNameFactory("vc-media-playback-speed-");
+
+const min = 0.25;
+const max = 3.5;
+const speeds = makeRange(min, max, 0.25);
+
+const settings = definePluginSettings({
+    defaultVoiceMessageSpeed: {
+        type: OptionType.SLIDER,
+        default: 1,
+        description: "Voice messages",
+        markers: speeds,
+    },
+    defaultVideoSpeed: {
+        type: OptionType.SLIDER,
+        default: 1,
+        description: "Videos",
+        markers: speeds,
+    },
+    defaultAudioSpeed: {
+        type: OptionType.SLIDER,
+        default: 1,
+        description: "Audios",
+        markers: speeds,
+    },
+});
+
+type MediaRef = RefObject<HTMLMediaElement> | undefined;
 
 export default definePlugin({
-    name: "BetterVideoPlayer",
-    description: "Adds Loop and Picture-in-Picture buttons to the video player.",
-    authors: [EquicordDevs.creations],
+    name: "MediaPlaybackSpeed",
+    description: "Allows changing the (default) playback speed of media embeds",
+    tags: ["Chat", "Media"],
+    authors: [Devs.D3SOX],
+    settings,
     patches: [
+        // replace voice message embed speed control because ours provides more speeds
         {
+            find: "\"--:--\"",
+            replacement: {
+                match: /\(0,\i\.jsxs?\)\(.{0,50}\.\i,onClick:\(\).+?\}\)\}\)(?<=playbackCacheKey:\i\}=\i,(\i).+?)/,
+                replace: "$self.renderPlaybackSpeedComponent({mediaRef:$1})"
+            }
+        },
+        // audio & video embeds
+        {
+            // need to pass media ref via props to make it easily accessible from inside controls
             find: "renderControls(){",
             replacement: {
                 match: /onToggleMuted:this.toggleMuted,/,
@@ -22,65 +73,66 @@ export default definePlugin({
             find: "AUDIO:\"AUDIO\"",
             replacement: {
                 match: /sliderWrapperClassName:\i.\i\}\)\}\),/,
-                replace: "$&$self.renderButtons({mediaRef:this?.props?.mediaRef}),"
+                replace: "$&$self.renderPlaybackSpeedComponent({mediaRef:this?.props?.mediaRef}),"
             }
         }
     ],
+    renderPlaybackSpeedComponent: ErrorBoundary.wrap(({ mediaRef }: { mediaRef: MediaRef; }) => {
+        const changeSpeed = (speed: number) => {
+            const media = mediaRef?.current;
+            if (media) {
+                media.playbackRate = speed;
+            }
+        };
 
-    renderButtons: ErrorBoundary.wrap(({ mediaRef }: { mediaRef: MediaRef; }) => {
-        const media = mediaRef?.current;
-        if (!media || media.tagName !== "VIDEO") return null;
+        useEffect(() => {
+            const media = mediaRef?.current;
+            if (!media) return;
+            if (media.tagName === "AUDIO") {
+                const isVoiceMessage = media.className.includes("audioElement");
+                if (isVoiceMessage) {
+                    // Workaround because Discord seems to override it somewhere
+                    media.addEventListener("play", () => { changeSpeed(settings.store.defaultVoiceMessageSpeed); }, { once: true });
+                } else {
+                    changeSpeed(settings.store.defaultAudioSpeed);
+                }
+            } else if (media.tagName === "VIDEO") {
+                changeSpeed(settings.store.defaultVideoSpeed);
+            }
+        }, [mediaRef]);
 
         return (
-            <>
-                <Tooltip text="Toggle Loop">
-                    {tooltipProps => (
-                        <button
-                            {...tooltipProps}
-                            style={{ cursor: "pointer", background: "none", border: "none", padding: "4px", color: "currentColor" }}
-                            onClick={() => {
-                                const video = mediaRef?.current;
-                                if (!video) return;
-                                video.loop = !video.loop;
-                            }}
-                        >
-                            <svg width="24px" height="24px" viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
-                            </svg>
-                        </button>
-                    )}
-                </Tooltip>
-                <Tooltip text="Picture in Picture">
-                    {tooltipProps => (
-                        <button
-                            {...tooltipProps}
-                            style={{ cursor: "pointer", background: "none", border: "none", padding: "4px", color: "currentColor" }}
-                            onClick={() => {
-                                const video = mediaRef?.current;
-                                if (!video) return;
-                                const clone = document.body.appendChild(video.cloneNode(true)) as HTMLVideoElement;
-                                clone.loop = video.loop;
-                                clone.style.display = "none";
-                                clone.onleavepictureinpicture = () => clone.remove();
-
-                                function launch() {
-                                    clone.currentTime = video!.currentTime;
-                                    clone.requestPictureInPicture();
-                                    video!.pause();
-                                    clone.play();
-                                }
-
-                                if (clone.readyState === 4) launch();
-                                else clone.onloadedmetadata = launch;
-                            }}
-                        >
-                            <svg width="24px" height="24px" viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M21 3a1 1 0 0 1 1 1v7h-2V5H4v14h6v2H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h18zm0 10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h8zm-1 2h-6v4h6v-4z" />
-                            </svg>
-                        </button>
-                    )}
-                </Tooltip>
-            </>
+            <Tooltip text="Playback speed">
+                {tooltipProps => (
+                    <button
+                        {...tooltipProps}
+                        className={cl("icon")}
+                        onClick={e => {
+                            ContextMenuApi.openContextMenu(e, () =>
+                                <Menu.Menu
+                                    navId="vc-playback-speed"
+                                    onClose={() => FluxDispatcher.dispatch({ type: "CONTEXT_MENU_CLOSE" })}
+                                    aria-label="Playback speed control"
+                                >
+                                    <Menu.MenuGroup
+                                        label="Playback speed"
+                                    >
+                                        {speeds.map(speed => (
+                                            <Menu.MenuItem
+                                                key={speed}
+                                                id={"speed-" + speed}
+                                                label={`${speed}x`}
+                                                action={() => changeSpeed(speed)}
+                                            />
+                                        ))}
+                                    </Menu.MenuGroup>
+                                </Menu.Menu>
+                            );
+                        }}>
+                        <SpeedIcon />
+                    </button>
+                )}
+            </Tooltip>
         );
     })
 });

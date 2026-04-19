@@ -9,8 +9,8 @@ import { canonicalizeMatch } from "@utils/patches";
 import { ModuleFactory } from "@vencord/discord-types/webpack";
 import * as Webpack from "@webpack";
 import { wreq } from "@webpack";
-import pLimit from "p-limit";
 import { AnyModuleFactory } from "@webpack/types";
+import pLimit from "p-limit";
 
 function getWebpackChunkMap() {
     const sym = Symbol();
