@@ -27,7 +27,7 @@ import { Margins } from "@utils/margins";
 import { identity, isAnyPluginDev } from "@utils/misc";
 import { relaunch } from "@utils/native";
 import { GuildMemberStore, React, Select, UserStore } from "@webpack/common";
-import BadgeAPI from "plugins/_api/badges";
+import BadgeAPI from "@plugins/_api/badges";
 
 import { DonateButtonComponent } from "./DonateButton";
 import { openNotificationSettingsModal } from "./NotificationSettings";

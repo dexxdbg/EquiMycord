@@ -10,7 +10,7 @@ import { ModuleFactory } from "@vencord/discord-types/webpack";
 import * as Webpack from "@webpack";
 import { wreq } from "@webpack";
 import pLimit from "p-limit";
-import { AnyModuleFactory } from "webpack";
+import { AnyModuleFactory } from "@webpack/types";
 
 function getWebpackChunkMap() {
     const sym = Symbol();

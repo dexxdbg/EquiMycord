@@ -7,7 +7,7 @@
 import { detectClient } from "@plugins/_core/supportHelper";
 import { gitHashShort } from "@shared/vencordUserAgent";
 import { React } from "@webpack/common";
-import SettingsPlugin from "plugins/_core/settings";
+import SettingsPlugin from "@plugins/_core/settings";
 import { JSX } from "react";
 
 import { ChromiumIcon, ClientIcon, DevBannerIcon, DiscordIcon, ElectronIcon, EquicordIcon, names, settings } from ".";

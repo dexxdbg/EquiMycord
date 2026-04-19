@@ -5,7 +5,7 @@
  */
 
 import { app } from "electron";
-import { RendererSettings } from "main/settings";
+import { RendererSettings } from "@main/settings";
 
 app.on("browser-window-created", (_, win) => {
     win.webContents.on("frame-created", (_, { frame }) => {

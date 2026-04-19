@@ -10,8 +10,8 @@ import { getIntlMessageFromHash } from "@utils/discord";
 import { canonicalizeMatch, canonicalizeReplace } from "@utils/patches";
 import { filters, findAll, search, wreq } from "@webpack";
 import { React, Toasts, useState } from "@webpack/common";
-import { loadLazyChunks } from "debug/loadLazyChunks";
-import { reporterData } from "debug/reporterData";
+import { loadLazyChunks } from "@debug/loadLazyChunks";
+import { reporterData } from "@debug/reporterData";
 import { Settings } from "Vencord";
 
 import { CLIENT_VERSION, logger, PORT, settings } from ".";

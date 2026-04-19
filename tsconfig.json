@@ -20,11 +20,14 @@
         "target": "ESNEXT",
         "jsx": "preserve",
         "paths": {
+            "Vencord": [
+                "./src/Vencord.ts"
+            ],
             "@main/*": [
                 "./src/main/*"
             ],
             "@api/*": [
-                "./src/capi/*"
+                "./src/api/*"
             ],
             "@components/*": [
                 "./src/components/*"
