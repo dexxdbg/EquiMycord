@@ -249,7 +249,8 @@ export default definePlugin({
         } satisfies ProfileBadge));
     },
     getCustomBadges(userId: string) {
-        return CustomBadges[userId]?.map(badge => ({
+        return CustomBadges[userId]?.map((badge, idx) => ({
+            id: `equicord_custom_badge_${idx}`,
             iconSrc: badge.badge,
             description: badge.tooltip,
             position: BadgePosition.START,
