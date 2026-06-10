@@ -1345,6 +1345,10 @@ export const EquicordDevs = Object.freeze({
         name: "BachLe2000",
         id: 624091967625625610n
     },
+    pandaptable: {
+        name: "pandaptable",
+        id: 97153209843335168n
+    },
 } satisfies Record<string, Dev>);
 
 // iife so #__PURE__ works correctly
